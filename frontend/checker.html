@@ -98,12 +98,10 @@
 
     loadRooms();
 
-    // 确保每次进入页面都刷新数据（包括从 history.back() 返回时）
-    window.addEventListener('pageshow', (event) => {
-      if (event.persisted) {
-        // 页面从 bfcache 恢复，需要重新加载数据
-        loadRooms();
-      }
+    // 确保每次进入页面都刷新数据
+    window.addEventListener('pageshow', () => loadRooms());
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') loadRooms();
     });
   </script>
 </body>
