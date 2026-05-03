@@ -20,7 +20,7 @@ from services.importer import import_students_from_excel
 
 router = APIRouter(prefix="/api/admin", tags=["管理员端"])
 
-ALL_BUILDINGS = [7, 10, 11, 17, 19]
+ALL_BUILDINGS = [7, 8, 10, 11, 17, 19]
 
 
 def get_admin_user(authorization: str = Header(None)) -> dict:
