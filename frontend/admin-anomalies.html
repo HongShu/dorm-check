@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>异常明细</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="page-header">
+    <div class="page-title">异常明细</div>
+    <button class="btn btn-outline" style="width:auto;padding:8px 12px;margin:0;" onclick="location.href='admin.html'">返回</button>
+  </div>
+  <div class="page-meta" id="dateMeta"></div>
+
+  <div class="filter-row">
+    <select id="filterBuilding">
+      <option value="">全部楼栋</option>
+      <option value="7">7号楼</option>
+      <option value="10">10号楼</option>
+      <option value="11">11号楼</option>
+      <option value="17">17号楼</option>
+      <option value="19">19号楼</option>
+    </select>
+    <select id="filterType">
+      <option value="">全部类型</option>
+      <option value="应在未在">应在未在</option>
+      <option value="应离已返">应离已返</option>
+    </select>
+    <button class="btn btn-outline" style="width:auto;padding:8px 12px;" onclick="loadAnomalies()">筛选</button>
+    <button class="btn btn-outline" style="width:auto;padding:8px 12px;" onclick="exportExcel()">导出</button>
+  </div>
+
+  <div id="anomalyList" class="anomaly-list"></div>
+
+  <script src="utils/api.js"></script>
+  <script>
+    const date = getToday();
+    document.getElementById('dateMeta').textContent = date;
+
+    async function loadAnomalies() {
+      const building = document.getElementById('filterBuilding').value;
+      const type = document.getElementById('filterType').value;
+      try {
+        const data = await getAnomalies(date, building || null, type || null, null);
+        render(data.items);
+      } catch (e) {
+        document.getElementById('anomalyList').innerHTML = '<div class="empty-state">加载失败: ' + e.message + '</div>';
+      }
+    }
+
+    function render(items) {
+      const el = document.getElementById('anomalyList');
+      if (items.length === 0) {
+        el.innerHTML = '<div class="empty-state">无异常记录</div>';
+        return;
+      }
+      el.innerHTML = '';
+      items.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'anomaly-item';
+        div.innerHTML = `
+          <div class="anomaly-desc">${item.building}号楼 ${item.room} ${item.name}（${item.student_id}）</div>
+          <div class="anomaly-meta">${item.anomaly_type} | 辅导员: ${item.counselor} | 宿管: ${item.checker} | ${item.submitted_at ? item.submitted_at.slice(11, 16) : ''}</div>
+        `;
+        el.appendChild(div);
+      });
+    }
+
+    function exportExcel() {
+      const building = document.getElementById('filterBuilding').value;
+      const type = document.getElementById('filterType').value;
+      let url = '/api/admin/export?date=' + date;
+      if (building) url += '&building=' + building;
+      if (type) url += '&type=' + encodeURIComponent(type);
+      window.open(url, '_blank');
+    }
+
+    loadAnomalies();
+  </script>
+</body>
+</html>

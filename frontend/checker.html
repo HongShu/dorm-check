@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>宿管查寝</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="page-header">
+    <div class="page-title" id="title">7号楼 - 查寝</div>
+    <button class="btn btn-outline" style="width:auto;padding:8px 12px;margin:0;" onclick="logout()">退出</button>
+  </div>
+  <div class="page-meta" id="meta">加载中...</div>
+  <div class="progress-bar">
+    <div class="progress-fill" id="progressFill" style="width:0%"></div>
+  </div>
+  <div id="roomList" class="room-list loading">加载中...</div>
+  <button class="btn btn-success" id="finishBtn" onclick="doFinish()" disabled>一键完成今晚查寝</button>
+
+  <script src="utils/api.js"></script>
+  <script>
+    const user = getUser();
+    if (!user) { location.href = 'index.html'; }
+    if (user.role !== 'checker') { location.href = 'admin.html'; }
+
+    const date = getToday();
+    const building = user.assigned_building;
+    document.getElementById('title').textContent = building + '号楼 - 查寝';
+    document.getElementById('meta').textContent = date;
+
+    let roomsData = [];
+
+    async function loadRooms() {
+      try {
+        const data = await getRooms(date);
+        roomsData = data.rooms;
+        render(data);
+      } catch (e) {
+        document.getElementById('roomList').innerHTML = '<div class="empty-state">加载失败: ' + e.message + '</div>';
+      }
+    }
+
+    function render(data) {
+      document.getElementById('meta').textContent = data.date + ' | ' + data.building + '号楼';
+
+      const checked = data.rooms.filter(r => r.checked).length;
+      const total = data.rooms.length;
+      const pct = total > 0 ? Math.round(checked / total * 100) : 0;
+      document.getElementById('progressFill').style.width = pct + '%';
+      document.getElementById('meta').textContent = date + ' | 已完成 ' + checked + ' / ' + total + ' 个寝室';
+
+      const finishBtn = document.getElementById('finishBtn');
+      finishBtn.disabled = checked < total;
+
+      if (data.rooms.length === 0) {
+        document.getElementById('roomList').innerHTML = '<div class="empty-state">暂无寝室数据</div>';
+        return;
+      }
+
+      const list = document.getElementById('roomList');
+      list.innerHTML = '';
+      data.rooms.forEach(room => {
+        const icon = room.anomaly_count > 0 ? '!' : (room.checked ? 'Y' : 'O');
+        const iconClass = room.anomaly_count > 0 ? 'warning' : (room.checked ? 'checked' : 'unchecked');
+        const desc = room.checked
+          ? (room.anomaly_count > 0 ? room.anomaly_count + ' 异常' : '已查完')
+          : room.expected_count + ' 人应在校';
+        const card = document.createElement('div');
+        card.className = 'room-card';
+        card.innerHTML = `
+          <div class="room-icon ${iconClass}">${icon}</div>
+          <div class="room-info">
+            <div class="room-name">${room.room}</div>
+            <div class="room-desc">${desc}</div>
+          </div>
+          <div class="room-arrow">&gt;</div>
+        `;
+        card.onclick = () => location.href = 'checker-detail.html?room=' + room.room + '&date=' + date;
+        list.appendChild(card);
+      });
+    }
+
+    async function doFinish() {
+      if (!confirm('确认所有寝室已查完？')) return;
+      try {
+        const result = await finishCheck(date);
+        if (result.all_buildings_done) {
+          alert('所有楼栋查寝已完成！');
+        } else {
+          alert('本楼栋已标记完成');
+        }
+        loadRooms();
+      } catch (e) {
+        alert('提交失败: ' + e.message);
+      }
+    }
+
+    loadRooms();
+
+    // 确保每次进入页面都刷新数据（包括从 history.back() 返回时）
+    window.addEventListener('pageshow', (event) => {
+      if (event.persisted) {
+        // 页面从 bfcache 恢复，需要重新加载数据
+        loadRooms();
+      }
+    });
+  </script>
+</body>
+</html>
