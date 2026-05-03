@@ -14,7 +14,7 @@ from database import get_db
 from config import settings
 from models.check_record import CheckRecord
 from models.student import Student
-from schemas.admin import ReportResponse
+from schemas.admin import ReportResponse, GenerateReportRequest
 from schemas.auth import ApiResponse
 from services.llm_client import generate_report
 
