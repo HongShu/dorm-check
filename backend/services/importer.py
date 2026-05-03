@@ -17,7 +17,7 @@ Excel 导入逻辑（F-01）
 from datetime import datetime
 from io import BytesIO
 from openpyxl import load_workbook
-from sqlalchemy import delete
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 from typing import Union
 
@@ -51,15 +51,11 @@ def _match_header(header: str) -> str | None:
 def import_students_from_excel(db: Session, source: Union[str, BytesIO]) -> dict:
     """
     从 Excel 文件导入学生数据。source 支持文件路径或 BytesIO。
-    导入前会清空 students 表。
+    REPLACE INTO 策略：重复学号自动覆盖，无冲突。
 
     Returns:
         {"imported": int, "by_building": {building: count}}
     """
-    # 清空现有数据（立即执行，确保后续 insert 不冲突）
-    db.execute(delete(Student))
-    db.expire_all()  # 清除 identity map 缓存，避免 db.get() 返回已删除的缓存对象
-
     wb = load_workbook(source, data_only=True)
     ws = wb.active
 
@@ -91,13 +87,16 @@ def import_students_from_excel(db: Session, source: Union[str, BytesIO]) -> dict
             continue
 
         student_id = str(row_dict["student_id"]).strip()
-        existing = db.get(Student, student_id)
-        if existing:
-            for key, val in row_dict.items():
-                setattr(existing, key, val)
-            existing.updated_at = datetime.utcnow()
-        else:
-            db.add(Student(**row_dict, updated_at=datetime.utcnow()))
+        now = datetime.utcnow().isoformat()
+
+        # 使用 REPLACE INTO：重复主键自动覆盖，无 UNIQUE 冲突
+        sql = text("""
+            INSERT OR REPLACE INTO student
+              (student_id, name, gender, class_name, counselor, building, room, status, updated_at)
+            VALUES
+              (:student_id, :name, :gender, :class_name, :counselor, :building, :room, :status, :updated_at)
+        """)
+        db.execute(sql, {**row_dict, "updated_at": now})
 
         b = row_dict.get("building")
         if b:
