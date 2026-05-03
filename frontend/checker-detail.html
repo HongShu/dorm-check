@@ -140,7 +140,7 @@
 
       try {
         await submitCheck({ date, room, records });
-        history.back();
+        location.href = 'checker.html';
       } catch (e) {
         msgEl.textContent = e.message;
         msgEl.classList.remove('hidden');
