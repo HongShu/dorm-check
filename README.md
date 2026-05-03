@@ -31,7 +31,7 @@ dorm-check/
 
 ## Getting Started
 
-### Backend
+### Backend (Development)
 
 ```bash
 cd backend
@@ -42,9 +42,60 @@ python -m scripts.init_db
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
+Then visit http://localhost:8000/docs for API docs.
+
 ### Mini-program
 
 Open `miniprogram/` directory in WeChat Developer Tools and configure the backend URL in `utils/config.js`.
+
+---
+
+## Deployment (Ubuntu Server)
+
+### 1. Install system dependencies
+
+```bash
+sudo apt update
+sudo apt install python3.12-venv nginx
+```
+
+### 2. Clone & setup
+
+```bash
+git clone https://github.com/HongShu/dorm-check.git
+cd dorm-check
+bash deploy.sh
+```
+
+### 3. Configure environment
+
+Edit `backend/.env` and fill in:
+
+```
+ANTHROPIC_API_KEY=sk-ant-...
+JWT_SECRET=your-secret-key
+```
+
+### 4. Setup Nginx (optional, for HTTP)
+
+```bash
+sudo cp deploy/nginx.conf /etc/nginx/sites-available/dorm-check
+# Edit /etc/nginx/sites-available/dorm-check, replace /path/to/dorm-check with actual path
+sudo ln -s /etc/nginx/sites-available/dorm-check /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+### 5. Enable HTTPS with Certbot (optional)
+
+```bash
+sudo apt install certbot python3-certbot-nginx
+sudo certbot --nginx -d your-domain.com
+```
+
+### 6. Update mini-program config
+
+In `miniprogram/utils/config.js`, set `baseUrl` to your server domain.
 
 ## License
 
