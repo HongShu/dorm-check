@@ -64,7 +64,7 @@ sudo apt install python3.12-venv nginx
 ```bash
 git clone https://github.com/HongShu/dorm-check.git
 cd dorm-check
-bash deploy.sh
+sudo bash deploy.sh
 ```
 
 ### 3. Configure environment
@@ -76,7 +76,21 @@ ANTHROPIC_API_KEY=sk-ant-...
 JWT_SECRET=your-secret-key
 ```
 
-### 4. Setup Nginx (optional, for HTTP)
+Then restart the service:
+
+```bash
+sudo systemctl restart dorm-check
+```
+
+### 4. Manage service
+
+```bash
+sudo systemctl status dorm-check   # 查看状态
+sudo systemctl restart dorm-check  # 重启
+sudo journalctl -u dorm-check -f   # 查看日志
+```
+
+### 5. Setup Nginx (optional, for HTTP)
 
 ```bash
 sudo cp deploy/nginx.conf /etc/nginx/sites-available/dorm-check
@@ -86,14 +100,14 @@ sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-### 5. Enable HTTPS with Certbot (optional)
+### 6. Enable HTTPS with Certbot (optional)
 
 ```bash
 sudo apt install certbot python3-certbot-nginx
 sudo certbot --nginx -d your-domain.com
 ```
 
-### 6. Update mini-program config
+### 7. Update mini-program config
 
 In `miniprogram/utils/config.js`, set `baseUrl` to your server domain.
 

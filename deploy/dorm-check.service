@@ -1,0 +1,15 @@
+[Unit]
+Description=dorm-check backend
+After=network.target
+
+[Service]
+User=xxzx
+Group=xxzx
+WorkingDirectory=/home/xxzx/dorm-check/backend
+Environment="PATH=/home/xxzx/dorm-check/backend/.venv/bin"
+ExecStart=/home/xxzx/dorm-check/backend/.venv/bin/gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app --bind 127.0.0.1:8000
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
