@@ -58,6 +58,7 @@ def import_students_from_excel(db: Session, source: Union[str, BytesIO]) -> dict
     """
     # 清空现有数据（立即执行，确保后续 insert 不冲突）
     db.execute(delete(Student))
+    db.expire_all()  # 清除 identity map 缓存，避免 db.get() 返回已删除的缓存对象
 
     wb = load_workbook(source, data_only=True)
     ws = wb.active
