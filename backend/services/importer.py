@@ -17,6 +17,7 @@ Excel 导入逻辑（F-01）
 from datetime import datetime
 from io import BytesIO
 from openpyxl import load_workbook
+from sqlalchemy import delete
 from sqlalchemy.orm import Session
 from typing import Union
 
@@ -55,8 +56,8 @@ def import_students_from_excel(db: Session, source: Union[str, BytesIO]) -> dict
     Returns:
         {"imported": int, "by_building": {building: count}}
     """
-    # 清空现有数据
-    db.query(Student).delete()
+    # 清空现有数据（立即执行，确保后续 insert 不冲突）
+    db.execute(delete(Student))
 
     wb = load_workbook(source, data_only=True)
     ws = wb.active
