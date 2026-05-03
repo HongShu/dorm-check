@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>管理员 Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="page-header">
+    <div class="page-title">查寝管理</div>
+    <button class="btn btn-outline" style="width:auto;padding:8px 12px;margin:0;" onclick="logout()">退出</button>
+  </div>
+  <div class="page-meta" id="dateMeta"></div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value" id="statBuildings">-</div>
+      <div class="stat-label">楼栋进度</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value warning" id="statAnomalies">-</div>
+      <div class="stat-label">异常总数</div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn btn-outline" onclick="location.href='admin-report.html'">查看简报</button>
+    <button class="btn btn-outline" onclick="location.href='admin-anomalies.html'">异常明细</button>
+    <button class="btn btn-outline" onclick="location.href='admin-import.html'">导入学生</button>
+  </div>
+
+  <div id="buildingList" class="building-list"></div>
+
+  <script src="utils/api.js"></script>
+  <script>
+    const user = getUser();
+    if (!user) { location.href = 'index.html'; }
+    if (user.role !== 'admin') { location.href = 'checker.html'; }
+
+    const date = getToday();
+    document.getElementById('dateMeta').textContent = date;
+
+    async function loadDashboard() {
+      try {
+        const data = await getDashboard(date);
+        render(data);
+      } catch (e) {
+        document.getElementById('buildingList').innerHTML = '<div class="empty-state">加载失败: ' + e.message + '</div>';
+      }
+    }
+
+    function render(data) {
+      const done = data.buildings.filter(b => b.checked_rooms >= b.total_rooms && b.total_rooms > 0).length;
+      document.getElementById('statBuildings').textContent = done + ' / ' + data.buildings.length;
+      document.getElementById('statAnomalies').textContent = data.anomaly_summary.total;
+
+      const list = document.getElementById('buildingList');
+      list.innerHTML = '';
+      data.buildings.forEach(b => {
+        const done = b.checked_rooms >= b.total_rooms && b.total_rooms > 0;
+        const status = done
+          ? '<span class="building-status done">已完成 ' + (b.finished_at ? b.finished_at.slice(11, 16) : '') + '</span>'
+          : '<span class="building-status pending">' + b.checked_rooms + ' / ' + b.total_rooms + ' 寝室</span>';
+        const div = document.createElement('div');
+        div.className = 'building-item';
+        div.innerHTML = `<span class="building-name">${b.building}号楼</span>${status}`;
+        list.appendChild(div);
+      });
+    }
+
+    loadDashboard();
+  </script>
+</body>
+</html>

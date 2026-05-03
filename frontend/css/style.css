@@ -1,0 +1,407 @@
+/* 全局样式 - 简单、清晰、移动优先 */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --primary: #2563eb;
+  --success: #16a34a;
+  --warning: #dc2626;
+  --bg: #f5f5f5;
+  --card: #ffffff;
+  --text: #1f2937;
+  --text-secondary: #6b7280;
+  --border: #e5e7eb;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+/* 登录页 */
+.login-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 80vh;
+  padding: 20px;
+}
+
+.login-title {
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.login-subtitle {
+  text-align: center;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 4px;
+  color: var(--text-secondary);
+}
+
+input[type="text"],
+input[type="password"] {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 16px;
+  outline: none;
+}
+
+input:focus {
+  border-color: var(--primary);
+}
+
+.btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-success {
+  background: var(--success);
+  color: white;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.error-msg {
+  color: var(--warning);
+  font-size: 14px;
+  text-align: center;
+  margin-top: 8px;
+}
+
+/* 页面头部 */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.page-title {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.page-meta {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+/* 进度条 */
+.progress-bar {
+  background: var(--border);
+  border-radius: 4px;
+  height: 8px;
+  margin-bottom: 16px;
+}
+
+.progress-fill {
+  background: var(--success);
+  height: 8px;
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+/* 寝室卡片 */
+.room-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.room-card {
+  background: var(--card);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  transition: box-shadow 0.2s;
+}
+
+.room-card:active {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.room-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.room-icon.checked { background: #dcfce7; }
+.room-icon.unchecked { background: #f3f4f6; }
+.room-icon.warning { background: #fef2f2; }
+
+.room-info {
+  flex: 1;
+}
+
+.room-name {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.room-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.room-arrow {
+  color: var(--text-secondary);
+  font-size: 18px;
+}
+
+/* 学生勾选列表 */
+.student-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.student-item {
+  background: var(--card);
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--border);
+}
+
+.student-item input[type="checkbox"] {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--success);
+}
+
+.student-info {
+  flex: 1;
+}
+
+.student-name {
+  font-weight: 500;
+}
+
+.student-id {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.absent-tag {
+  font-size: 12px;
+  color: var(--warning);
+  background: #fef2f2;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+/* Dashboard */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.stat-card {
+  background: var(--card);
+  border-radius: 10px;
+  padding: 16px;
+  border: 1px solid var(--border);
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: bold;
+  color: var(--primary);
+}
+
+.stat-value.warning { color: var(--warning); }
+
+.stat-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.building-list {
+  background: var(--card);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.building-item {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.building-item:last-child { border-bottom: none; }
+
+.building-name {
+  flex: 1;
+  font-weight: 500;
+}
+
+.building-status {
+  font-size: 13px;
+}
+
+.building-status.done { color: var(--success); }
+.building-status.pending { color: var(--text-secondary); }
+
+/* 异常列表 */
+.anomaly-section {
+  margin-bottom: 24px;
+}
+
+.anomaly-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  padding-left: 4px;
+}
+
+.anomaly-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.anomaly-item {
+  background: var(--card);
+  border-radius: 8px;
+  padding: 12px 14px;
+  border-left: 4px solid var(--warning);
+  border: 1px solid var(--border);
+}
+
+.anomaly-desc {
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.anomaly-meta {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* 简报 */
+.report-text {
+  background: var(--card);
+  border-radius: 10px;
+  padding: 20px;
+  font-size: 15px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  border: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+.btn-row {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-row .btn {
+  flex: 1;
+  margin-top: 0;
+}
+
+/* 筛选 */
+.filter-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.filter-row select {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+}
+
+/* 工具栏 */
+.toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-secondary);
+}
+
+/* 加载中 */
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-secondary);
+}
+
+/* 隐藏 */
+.hidden { display: none !important; }

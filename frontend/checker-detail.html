@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>寝室查寝</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="page-header">
+    <div class="page-title" id="title">401 寝室</div>
+    <button class="btn btn-outline" style="width:auto;padding:8px 12px;margin:0;" onclick="history.back()">返回</button>
+  </div>
+
+  <div id="sectionExpected">
+    <div class="page-meta" style="margin-bottom:8px">点选实际不在寝的学生</div>
+    <div class="student-list" id="expectedList"></div>
+    <div style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;padding-left:4px">
+      未点选 = 正常在寝，无需操作
+    </div>
+  </div>
+
+  <div id="sectionOffCampus" class="hidden">
+    <div class="page-meta" style="margin-bottom:8px">发现返校学生（点选）</div>
+    <div class="student-list" id="offCampusList"></div>
+    <div style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;padding-left:4px">
+      这些学生系统显示离校，勾选表示实际已返校
+    </div>
+  </div>
+
+  <div style="margin-top:16px">
+    <button class="btn btn-success" id="btnSubmit" onclick="doSubmit()">提交查寝结果</button>
+  </div>
+  <div id="msg" class="error-msg hidden" style="margin-top:8px"></div>
+
+  <script src="utils/api.js"></script>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const room = params.get('room');
+    const date = params.get('date') || getToday();
+    const user = getUser();
+    if (!user) { location.href = 'index.html'; }
+
+    document.getElementById('title').textContent = user.assigned_building + '号楼 ' + room + ' 寝室';
+
+    let detailData = null;
+
+    async function loadDetail() {
+      try {
+        detailData = await getRoomDetail(room, date);
+        render(detailData);
+      } catch (e) {
+        document.getElementById('msg').textContent = '加载失败: ' + e.message;
+        document.getElementById('msg').classList.remove('hidden');
+      }
+    }
+
+    function render(data) {
+      // 应在校 - 默认都不选（不在寝才点）
+      const el = document.getElementById('expectedList');
+      el.innerHTML = '';
+      data.expected_students.forEach(s => {
+        if (!s.student_id) return;
+        const div = document.createElement('div');
+        div.className = 'student-item';
+        div.innerHTML = `
+          <input type="checkbox" id="cb_${s.student_id}" style="accent-color:var(--warning)">
+          <div class="student-info">
+            <div class="student-name">${s.name}</div>
+            <div class="student-id">${s.student_id}</div>
+          </div>
+          <span class="absent-tag" id="tag_${s.student_id}" style="display:none">不在</span>
+        `;
+        const cb = div.querySelector('input');
+        const tagEl = div.querySelector(`#tag_${s.student_id}`);
+        cb.addEventListener('change', () => {
+          if (tagEl) tagEl.style.display = cb.checked ? 'inline' : 'none';
+        });
+        // 如果之前提交过不在寝，显示出来
+        if (s.is_present === false) {
+          cb.checked = true;
+          if (tagEl) tagEl.style.display = 'inline';
+        }
+        el.appendChild(div);
+      });
+
+      // 离校学生（添加返校）
+      const offEl = document.getElementById('offCampusList');
+      const sectionOff = document.getElementById('sectionOffCampus');
+      if (data.off_campus_students && data.off_campus_students.length > 0) {
+        sectionOff.classList.remove('hidden');
+        offEl.innerHTML = '';
+        data.off_campus_students.forEach(s => {
+          if (!s.student_id) return;
+          const div = document.createElement('div');
+          div.className = 'student-item';
+          div.innerHTML = `
+            <input type="checkbox" id="rc_${s.student_id}" style="accent-color:var(--success)">
+            <div class="student-info">
+              <div class="student-name">${s.name}</div>
+              <div class="student-id">${s.student_id}</div>
+            </div>
+            <span class="absent-tag" style="background:#dcfce7;color:var(--success);display:none" id="rtag_${s.student_id}">已返校</span>
+          `;
+          const cb = div.querySelector('input');
+          const tagEl = div.querySelector(`#rtag_${s.student_id}`);
+          cb.addEventListener('change', () => {
+            if (tagEl) tagEl.style.display = cb.checked ? 'inline' : 'none';
+          });
+          // 如果之前提交过已返校，显示出来
+          if (s.is_present === true) {
+            cb.checked = true;
+            if (tagEl) tagEl.style.display = 'inline';
+          }
+          offEl.appendChild(div);
+        });
+      }
+    }
+
+    async function doSubmit() {
+      const msgEl = document.getElementById('msg');
+      msgEl.classList.add('hidden');
+
+      const records = [];
+
+      // 不在寝的学生（勾选了 = 实际不在）
+      document.querySelectorAll('#expectedList .student-item').forEach(item => {
+        const cb = item.querySelector('input[type="checkbox"]');
+        const id = cb.id.replace('cb_', '');
+        // 勾选 = 不在寝
+        records.push({ student_id: id, is_present: !cb.checked });
+      });
+
+      // 返校学生（勾选了 = 实际在寝，取消勾选 = 未返校）
+      document.querySelectorAll('#offCampusList .student-item').forEach(item => {
+        const cb = item.querySelector('input[type="checkbox"]');
+        const id = cb.id.replace('rc_', '');
+        records.push({ student_id: id, is_present: cb.checked });
+      });
+
+      try {
+        await submitCheck({ date, room, records });
+        history.back();
+      } catch (e) {
+        msgEl.textContent = e.message;
+        msgEl.classList.remove('hidden');
+      }
+    }
+
+    loadDetail();
+  </script>
+</body>
+</html>

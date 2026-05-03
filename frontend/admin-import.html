@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>导入学生数据</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="page-header">
+    <div class="page-title">导入学生数据</div>
+    <button class="btn btn-outline" style="width:auto;padding:8px 12px;margin:0;" onclick="location.href='admin.html'">返回</button>
+  </div>
+
+  <div style="background:var(--card);border-radius:10px;padding:20px;border:1px solid var(--border);">
+    <p style="font-size:14px;color:var(--text-secondary);margin-bottom:16px">
+      上传 Excel 文件导入学生数据。支持 .xlsx 和 .xls 格式。<br>
+      重复学号会自动覆盖更新。
+    </p>
+    <input type="file" id="fileInput" accept=".xlsx,.xls" style="margin-bottom:16px">
+    <button class="btn btn-primary" id="uploadBtn" onclick="doUpload()">上传并导入</button>
+    <div id="msg" class="error-msg hidden" style="margin-top:12px"></div>
+  </div>
+
+  <div id="result" class="hidden" style="margin-top:16px"></div>
+
+  <script src="utils/api.js"></script>
+  <script>
+    const user = getUser();
+    if (!user) { location.href = 'index.html'; }
+    if (user.role !== 'admin') { location.href = 'checker.html'; }
+
+    async function doUpload() {
+      const fileInput = document.getElementById('fileInput');
+      const msgEl = document.getElementById('msg');
+      const resultEl = document.getElementById('result');
+      const btn = document.getElementById('uploadBtn');
+
+      if (!fileInput.files[0]) {
+        msgEl.textContent = '请选择文件';
+        msgEl.classList.remove('hidden');
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const formData = new FormData();
+      formData.append('file', file);
+
+      btn.disabled = true;
+      btn.textContent = '导入中...';
+      msgEl.classList.add('hidden');
+      resultEl.classList.add('hidden');
+
+      try {
+        const token = getToken();
+        const res = await fetch('/api/admin/import-students', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData,
+        });
+        const json = await res.json();
+        if (json.code !== 0) throw new Error(json.message);
+
+        const data = json.data;
+        let html = '<div style="background:var(--card);border-radius:10px;padding:16px;border:1px solid var(--border)">';
+        html += '<div style="font-weight:bold;margin-bottom:8px">导入完成</div>';
+        html += '<div style="font-size:14px">共导入 <strong>' + data.imported + '</strong> 条学生数据</div>';
+        html += '<div style="font-size:14px;margin-top:8px">按楼栋分布：</div>';
+        for (const [b, cnt] of Object.entries(data.by_building)) {
+          html += '<div style="font-size:14px;padding-left:12px">' + b + '号楼: ' + cnt + ' 人</div>';
+        }
+        html += '</div>';
+        resultEl.innerHTML = html;
+        resultEl.classList.remove('hidden');
+      } catch (e) {
+        msgEl.textContent = e.message;
+        msgEl.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '上传并导入';
+      }
+    }
+  </script>
+</body>
+</html>

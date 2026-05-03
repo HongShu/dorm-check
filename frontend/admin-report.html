@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>查寝简报</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="page-header">
+    <div class="page-title">查寝简报</div>
+    <button class="btn btn-outline" style="width:auto;padding:8px 12px;margin:0;" onclick="location.href='admin.html'">返回</button>
+  </div>
+  <div class="page-meta" id="dateMeta"></div>
+
+  <div id="reportText" class="report-text">加载中...</div>
+
+  <div class="btn-row">
+    <button class="btn btn-outline" onclick="copyReport()">复制</button>
+    <button class="btn btn-primary" onclick="regenerate()">重新生成</button>
+  </div>
+
+  <script src="utils/api.js"></script>
+  <script>
+    const date = getToday();
+    document.getElementById('dateMeta').textContent = date;
+
+    async function loadReport() {
+      try {
+        const data = await getReport(date);
+        document.getElementById('reportText').textContent = data.report;
+      } catch (e) {
+        document.getElementById('reportText').textContent = '加载失败: ' + e.message;
+      }
+    }
+
+    async function regenerate() {
+      if (!confirm('确认重新生成简报？')) return;
+      document.getElementById('reportText').textContent = '生成中...';
+      try {
+        const data = await generateReport(date);
+        document.getElementById('reportText').textContent = data.report;
+      } catch (e) {
+        document.getElementById('reportText').textContent = '生成失败: ' + e.message;
+      }
+    }
+
+    function copyReport() {
+      const text = document.getElementById('reportText').textContent;
+      navigator.clipboard.writeText(text).then(() => alert('已复制'));
+    }
+
+    loadReport();
+  </script>
+</body>
+</html>
