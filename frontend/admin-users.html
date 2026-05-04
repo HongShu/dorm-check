@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>用户管理</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="page-header">
+    <div class="page-title">用户管理</div>
+    <button class="btn btn-outline" style="width:auto;padding:8px 12px;margin:0;" onclick="location.href='admin.html'">返回</button>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn btn-primary" onclick="showResetModal()">批量重置密码</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">账号列表</div>
+    <table class="data-table" id="userTable">
+      <thead>
+        <tr>
+          <th>用户名</th>
+          <th>姓名</th>
+          <th>角色</th>
+          <th>负责楼栋</th>
+        </tr>
+      </thead>
+      <tbody id="userList">
+        <tr><td colspan="4" style="text-align:center;color:#999;">加载中...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 重置密码弹窗 -->
+  <div class="modal" id="resetModal" style="display:none;">
+    <div class="modal-content">
+      <div class="modal-title">批量重置密码</div>
+      <p style="color:#666;margin-bottom:12px;">所有查寝人员的密码将被统一重置为相同密码。</p>
+      <input type="password" class="form-input" id="newPassword" placeholder="输入新密码（4-50位）" minlength="4" maxlength="50">
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeResetModal()">取消</button>
+        <button class="btn btn-primary" onclick="doReset()">确认重置</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="utils/api.js"></script>
+  <script>
+    const user = getUser();
+    if (!user) { location.href = 'index.html'; }
+    if (user.role !== 'admin') { location.href = 'checker.html'; }
+
+    loadUsers();
+
+    async function loadUsers() {
+      try {
+        const data = await getUsers();
+        render(data.users);
+      } catch (e) {
+        document.getElementById('userList').innerHTML = '<tr><td colspan="4" style="text-align:center;color:#c00;">加载失败: ' + e.message + '</td></tr>';
+      }
+    }
+
+    function render(users) {
+      const tbody = document.getElementById('userList');
+      if (!users.length) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#999;">暂无数据</td></tr>';
+        return;
+      }
+      tbody.innerHTML = users.map(u => {
+        const roleLabel = u.role === 'admin' ? '管理员' : '查寝人员';
+        const buildingLabel = u.assigned_building ? u.assigned_building + '号楼' : '-';
+        return `<tr>
+          <td>${u.username}</td>
+          <td>${u.name}</td>
+          <td>${roleLabel}</td>
+          <td>${buildingLabel}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function showResetModal() {
+      document.getElementById('resetModal').style.display = 'flex';
+      document.getElementById('newPassword').value = '';
+    }
+
+    function closeResetModal() {
+      document.getElementById('resetModal').style.display = 'none';
+    }
+
+    async function doReset() {
+      const pwd = document.getElementById('newPassword').value;
+      if (pwd.length < 4 || pwd.length > 50) {
+        alert('密码长度需为4-50位');
+        return;
+      }
+      try {
+        const result = await resetCheckerPasswords(pwd);
+        alert('已重置 ' + result.updated_count + ' 个查寝人员密码');
+        closeResetModal();
+      } catch (e) {
+        alert('重置失败: ' + e.message);
+      }
+    }
+  </script>
+</body>
+</html>

@@ -106,3 +106,15 @@ function getToday() {
 function getBuildingName(b) {
   return b + '号楼';
 }
+
+// 用户管理
+async function getUsers() {
+  return request('/admin/users');
+}
+
+async function resetCheckerPasswords(newPassword) {
+  return request('/admin/reset-checker-passwords', {
+    method: 'POST',
+    body: JSON.stringify({ new_password: newPassword }),
+  });
+}

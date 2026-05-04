@@ -14,7 +14,9 @@ from models.user import User
 from schemas.admin import (
     DashboardResponse, BuildingProgress, AnomalySummary,
     AnomaliesResponse, AnomalyItem, ReportResponse, GenerateReportRequest, ImportResponse,
+    ResetCheckerPasswordsRequest, ResetPasswordsResponse, UserItem, UsersResponse,
 )
+from routers.auth import pwd_context
 from schemas.auth import ApiResponse
 from services.importer import import_students_from_excel
 
@@ -207,3 +209,34 @@ def export_anomalies(
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": f"attachment; filename=anomalies_{date}.xlsx"},
     )
+
+
+@router.get("/users", response_model=ApiResponse)
+def list_users(
+    db=Depends(get_db),
+    _=Depends(get_admin_user),
+):
+    """获取所有用户列表"""
+    users = db.query(User).all()
+    return ApiResponse(
+        data=UsersResponse(
+            users=[UserItem.model_validate(u) for u in users]
+        ).model_dump()
+    )
+
+
+@router.post("/reset-checker-passwords", response_model=ApiResponse)
+def reset_checker_passwords(
+    body: ResetCheckerPasswordsRequest,
+    db=Depends(get_db),
+    _=Depends(get_admin_user),
+):
+    """批量重置所有查寝人员密码为相同值"""
+    new_hash = pwd_context.hash(body.new_password)
+    updated = (
+        db.query(User)
+        .filter(User.role == "checker")
+        .update({User.password_hash: new_hash})
+    )
+    db.commit()
+    return ApiResponse(data=ResetPasswordsResponse(updated_count=updated).model_dump())

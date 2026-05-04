@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import date, datetime
 
 
@@ -48,3 +48,22 @@ class GenerateReportRequest(BaseModel):
 class ImportResponse(BaseModel):
     imported: int
     by_building: dict[int, int]
+
+
+class ResetCheckerPasswordsRequest(BaseModel):
+    new_password: str = Field(..., min_length=4, max_length=50)
+
+
+class ResetPasswordsResponse(BaseModel):
+    updated_count: int
+
+
+class UserItem(BaseModel):
+    username: str
+    name: str
+    role: str
+    assigned_building: int | None = None
+
+
+class UsersResponse(BaseModel):
+    users: list[UserItem]
