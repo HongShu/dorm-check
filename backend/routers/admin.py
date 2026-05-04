@@ -220,7 +220,12 @@ def list_users(
     users = db.query(User).all()
     return ApiResponse(
         data=UsersResponse(
-            users=[UserItem.model_validate(u) for u in users]
+            users=[UserItem(
+                username=u.username,
+                name=u.name,
+                role=u.role,
+                assigned_building=u.assigned_building,
+            ) for u in users]
         ).model_dump()
     )
 
